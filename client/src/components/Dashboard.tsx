@@ -92,13 +92,8 @@ export const Dashboard: React.FC = () => {
                 <p className="text-text-secondary text-sm mb-4">
                   Deadline:{" "}
                   <span className="font-medium">
-                    {new Date(room.deadline).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {/* CHANGED: Displaying date in UTC */}
+                    {new Date(room.deadline).toUTCString()} (UTC)
                   </span>
                 </p>
               </div>

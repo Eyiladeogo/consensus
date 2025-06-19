@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
-import { Loader2 } from "lucide-react"; // Importing a spinner icon
+import { Loader2 } from "lucide-react";
 
 // Define interfaces for the data structures
 interface Option {
@@ -215,18 +215,12 @@ export const DecisionRoom: React.FC = () => {
               Voting Deadline:
             </p>
             <p className="text-lg font-semibold text-text-primary">
-              {new Date(room.deadline).toLocaleString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-              {votingClosedDisplay && (
-                <span className="font-bold text-error-red ml-2"> (CLOSED)</span>
-              )}
+              {/* CHANGED: Displaying date in UTC */}
+              {new Date(room.deadline).toUTCString()} (UTC)
             </p>
-            {/* Timezone Note: Date displayed in user's local timezone. */}
+            {votingClosedDisplay && (
+              <span className="font-bold text-error-red ml-2"> (CLOSED)</span>
+            )}
           </div>
         </div>
 
@@ -272,7 +266,7 @@ export const DecisionRoom: React.FC = () => {
               htmlFor="comment"
               className="block text-text-secondary text-base font-medium mb-2"
             >
-              Optional: Justify your vote
+              Optional: Justify your vote (anonymous)
             </label>
             <textarea
               id="comment"
@@ -281,7 +275,7 @@ export const DecisionRoom: React.FC = () => {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               disabled={hasVoted}
-              placeholder="Share your thoughts on why you chose this option..."
+              placeholder="Share your anonymous thoughts on why you chose this option..."
             />
           </div>
         )}
