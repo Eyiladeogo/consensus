@@ -1,0 +1,24 @@
+/* client/src/index.css */
+/* Inject Tailwind's base, components, and utilities styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Optional: Set the Inter font globally if not already handled by Create React App's
+  default setup or your Tailwind config.
+  Make sure you have Inter available, typically via a CDN link in public/index.html
+  or by installing typeface-inter.
+*/
+body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f3f4f6; /* A very light gray background for the entire app */
+}
+
+/* Remove default browser outlines for a cleaner focus state, then add custom ones with Tailwind */
+*:focus {
+  outline: none;
+}
