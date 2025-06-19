@@ -10,30 +10,38 @@ declare global {
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkey"; // Use the same secret as in authController
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkey"; // Use the same secret as in authController and ensure this matches your .env
 
 export const protect = (req: Request, res: Response, next: NextFunction) => {
   let token;
 
-  // Check for 'Authorization' header with 'Bearer' token
+  // Check if an Authorization header exists and starts with 'Bearer'
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     try {
+      // Extract the token from the header
       token = req.headers.authorization.split(" ")[1];
 
-      // Verify token
-      const decoded: any = jwt.verify(token, JWT_SECRET); // Type 'any' for now, better to define an interface for decoded payload
-      req.userId = decoded.userId; // Attach user ID to the request object
-      next(); // Proceed to the next middleware/route handler
-    } catch (error: any) {
-      console.error("Token verification failed:", error.message);
-      return res.status(401).json({ message: "Not authorized, token failed." });
-    }
-  }
+      // Verify the token
+      // As a best practice, define an interface for the decoded payload instead of 'any'
+      const decoded: any = jwt.verify(token, JWT_SECRET);
 
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized, no token." });
+      // Attach the userId from the token payload to the request object
+      req.userId = decoded.userId;
+
+      // Call next() to pass control to the next middleware or route handler
+      next();
+    } catch (error: any) {
+      // If token verification fails (e.g., expired, invalid signature)
+      console.error("Token verification failed:", error.message);
+      res.status(401).json({ message: "Not authorized, token failed." });
+      // Do NOT call next() here, as we are sending a response and terminating the request flow.
+    }
+  } else {
+    // If no token is provided in the header
+    res.status(401).json({ message: "Not authorized, no token." });
+    // Do NOT call next() here.
   }
 };

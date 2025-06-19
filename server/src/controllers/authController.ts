@@ -10,16 +10,16 @@ export const registerUser = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res
-      .status(400)
-      .json({ message: "Username and password are required." });
+    res.status(400).json({ message: "Username and password are required." });
+    return;
   }
 
   try {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { username } });
     if (existingUser) {
-      return res.status(409).json({ message: "Username already taken." });
+      res.status(409).json({ message: "Username already taken." });
+      return;
     }
 
     // Hash password
@@ -40,12 +40,10 @@ export const registerUser = async (req: Request, res: Response) => {
       .json({ message: "User registered successfully!", user: newUser });
   } catch (error: any) {
     console.error("Error registering user:", error);
-    res
-      .status(500)
-      .json({
-        message: "Server error during registration.",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Server error during registration.",
+      error: error.message,
+    });
   }
 };
 
@@ -53,22 +51,23 @@ export const loginUser = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res
-      .status(400)
-      .json({ message: "Username and password are required." });
+    res.status(400).json({ message: "Username and password are required." });
+    return;
   }
 
   try {
     // Find user by username
     const user = await prisma.user.findUnique({ where: { username } });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials." });
+      res.status(401).json({ message: "Invalid credentials." });
+      return;
     }
 
     // Compare provided password with hashed password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials." });
+      res.status(401).json({ message: "Invalid credentials." });
+      return;
     }
 
     // Generate JWT

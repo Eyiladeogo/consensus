@@ -11,7 +11,8 @@ export const createDecisionRoom = async (req: Request, res: Response) => {
   const userId = req.userId; // From authMiddleware
 
   if (!userId) {
-    return res.status(401).json({ message: "User not authenticated." });
+    res.status(401).json({ message: "User not authenticated." });
+    return;
   }
   if (
     !title ||
@@ -21,12 +22,11 @@ export const createDecisionRoom = async (req: Request, res: Response) => {
     options.length > 5 ||
     !deadline
   ) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "All fields (title, explanation, 2-5 options, deadline) are required.",
-      });
+    res.status(400).json({
+      message:
+        "All fields (title, explanation, 2-5 options, deadline) are required.",
+    });
+    return;
   }
 
   try {
@@ -59,7 +59,8 @@ export const getDecisionRooms = async (req: Request, res: Response) => {
   const userId = req.userId; // From authMiddleware
 
   if (!userId) {
-    return res.status(401).json({ message: "User not authenticated." });
+    res.status(401).json({ message: "User not authenticated." });
+    return;
   }
 
   try {
@@ -92,7 +93,8 @@ export const getDecisionRoomById = async (req: Request, res: Response) => {
     });
 
     if (!room) {
-      return res.status(404).json({ message: "Decision room not found." });
+      res.status(404).json({ message: "Decision room not found." });
+      return;
     }
 
     // Determine if the current user has already voted in this room
@@ -108,12 +110,10 @@ export const getDecisionRoomById = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Error fetching decision room by ID:", error);
-    res
-      .status(500)
-      .json({
-        message: "Server error fetching room details.",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Server error fetching room details.",
+      error: error.message,
+    });
   }
 };
 
@@ -129,12 +129,11 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
   const voterIdentifier = userId; // If userId is null, it means guest.
 
   if (!voterIdentifier) {
-    return res
-      .status(401)
-      .json({
-        message:
-          "You must be logged in to vote in this example. Guest voting requires additional setup (e.g., unique cookie ID).",
-      });
+    res.status(401).json({
+      message:
+        "You must be logged in to vote in this example. Guest voting requires additional setup (e.g., unique cookie ID).",
+    });
+    return;
   }
 
   try {
@@ -142,13 +141,13 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
       where: { id: roomId },
     });
     if (!room) {
-      return res.status(404).json({ message: "Decision room not found." });
+      res.status(404).json({ message: "Decision room not found." });
+      return;
     }
 
     if (isVotingClosed(room.deadline)) {
-      return res
-        .status(400)
-        .json({ message: "Voting for this room has closed." });
+      res.status(400).json({ message: "Voting for this room has closed." });
+      return;
     }
 
     // Check if the option exists and belongs to this room
@@ -156,9 +155,10 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
       where: { id: optionId, decisionRoomId: roomId },
     });
     if (!option) {
-      return res
+      res
         .status(400)
         .json({ message: "Invalid option selected for this room." });
+      return;
     }
 
     // Enforce one vote per user (registered or guest identified by a unique ID)
@@ -170,9 +170,10 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
     });
 
     if (existingVote) {
-      return res
+      res
         .status(409)
         .json({ message: "You have already voted in this decision room." });
+      return;
     }
 
     await prisma.vote.create({
@@ -206,17 +207,17 @@ export const getDecisionTally = async (req: Request, res: Response) => {
       where: { id: roomId },
     });
     if (!room) {
-      return res.status(404).json({ message: "Decision room not found." });
+      res.status(404).json({ message: "Decision room not found." });
+      return;
     }
 
     // Only allow creator to see live tally if voting is not closed
     // Anyone can see final results after deadline
     if (!isVotingClosed(room.deadline) && room.creatorId !== userId) {
-      return res
-        .status(403)
-        .json({
-          message: "You are not authorized to view live tallies for this room.",
-        });
+      res.status(403).json({
+        message: "You are not authorized to view live tallies for this room.",
+      });
+      return;
     }
 
     const tally = await getTallyForRoom(roomId);
