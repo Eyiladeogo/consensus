@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  //  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -28,17 +28,17 @@ model User {
 
 // DecisionRoom model: Represents a collaborative decision room
 model DecisionRoom {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
   explanation String
-  deadline    DateTime  // When voting closes
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  deadline    DateTime // When voting closes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   // Relationships
   creatorId   String
-  creator     User      @relation(fields: [creatorId], references: [id])
+  creator     User     @relation(fields: [creatorId], references: [id])
   options     Option[]
-  votes       Vote[]    // All votes for this room
+  votes       Vote[] // All votes for this room
 }
 
 // Option model: Represents a voting option within a DecisionRoom
@@ -50,19 +50,21 @@ model Option {
   // Relationships
   decisionRoomId String
   decisionRoom   DecisionRoom @relation(fields: [decisionRoomId], references: [id], onDelete: Cascade)
-  votes          Vote[]       // Votes cast for this specific option
+  votes          Vote[] // Votes cast for this specific option
 }
 
 // Vote model: Records a single vote by a user/guest in a DecisionRoom
 model Vote {
   id             String       @id @default(uuid())
-  voterId        String       // Can be userId for registered users, or a unique guest ID (e.g., from cookie)
+  voterId        String // Can be userId for registered users, or a unique guest ID (e.g., from cookie)
   createdAt      DateTime     @default(now())
   // Relationships
   decisionRoomId String
   decisionRoom   DecisionRoom @relation(fields: [decisionRoomId], references: [id], onDelete: Cascade)
   optionId       String
   option         Option       @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  User           User?        @relation(fields: [userId], references: [id])
+  userId         String?
 
   // Ensure a voter can only vote once per decision room
   @@unique([decisionRoomId, voterId])
