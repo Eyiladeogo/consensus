@@ -12,7 +12,7 @@ export const createDecisionRoom = async (req: Request, res: Response) => {
 
   if (!userId) {
     res.status(401).json({ message: "User not authenticated." });
-    return;
+    return; // Stop execution
   }
   if (
     !title ||
@@ -26,7 +26,7 @@ export const createDecisionRoom = async (req: Request, res: Response) => {
       message:
         "All fields (title, explanation, 2-5 options, deadline) are required.",
     });
-    return;
+    return; // Stop execution
   }
 
   try {
@@ -60,7 +60,7 @@ export const getDecisionRooms = async (req: Request, res: Response) => {
 
   if (!userId) {
     res.status(401).json({ message: "User not authenticated." });
-    return;
+    return; // Stop execution
   }
 
   try {
@@ -88,18 +88,23 @@ export const getDecisionRoomById = async (req: Request, res: Response) => {
       where: { id },
       include: {
         options: true,
-        votes: userId ? { where: { voterId: userId } } : false, // Optionally include user's own vote
+        // When fetching a single room, include votes to determine 'hasVoted' status
+        // Select specific fields from vote to keep payload minimal
+        votes: userId
+          ? { where: { voterId: userId }, select: { id: true } }
+          : false,
       },
     });
 
     if (!room) {
       res.status(404).json({ message: "Decision room not found." });
-      return;
+      return; // Stop execution
     }
 
     // Determine if the current user has already voted in this room
     const hasVoted = room.votes && room.votes.length > 0;
-    // Remove the `votes` property if it was only for checking `hasVoted`
+    // Remove the `votes` property from the room object before sending it to the client,
+    // as it was only needed for the `hasVoted` check.
     const { votes, ...roomWithoutVotes } = room;
 
     res.status(200).json({
@@ -119,21 +124,17 @@ export const getDecisionRoomById = async (req: Request, res: Response) => {
 
 export const voteInDecisionRoom = async (req: Request, res: Response) => {
   const { id: roomId } = req.params;
-  const { optionId } = req.body;
+  const { optionId, comment } = req.body;
   const userId = req.userId; // For registered users
 
-  // For guest voting, you'd need a robust way to identify them,
-  // e.g., a unique ID stored in a cookie.
-  // For simplicity, this example enforces one vote per *authenticated* user.
-  // Implementing guest voting needs careful consideration of how to prevent multiple votes.
-  const voterIdentifier = userId; // If userId is null, it means guest.
+  const voterIdentifier = userId;
 
   if (!voterIdentifier) {
     res.status(401).json({
       message:
         "You must be logged in to vote in this example. Guest voting requires additional setup (e.g., unique cookie ID).",
     });
-    return;
+    return; // Stop execution
   }
 
   try {
@@ -142,15 +143,14 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
     });
     if (!room) {
       res.status(404).json({ message: "Decision room not found." });
-      return;
+      return; // Stop execution
     }
 
     if (isVotingClosed(room.deadline)) {
       res.status(400).json({ message: "Voting for this room has closed." });
-      return;
+      return; // Stop execution
     }
 
-    // Check if the option exists and belongs to this room
     const option = await prisma.option.findFirst({
       where: { id: optionId, decisionRoomId: roomId },
     });
@@ -158,14 +158,13 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
       res
         .status(400)
         .json({ message: "Invalid option selected for this room." });
-      return;
+      return; // Stop execution
     }
 
-    // Enforce one vote per user (registered or guest identified by a unique ID)
     const existingVote = await prisma.vote.findFirst({
       where: {
         decisionRoomId: roomId,
-        voterId: voterIdentifier, // This will be userId for authenticated, or unique guest ID
+        voterId: voterIdentifier,
       },
     });
 
@@ -173,23 +172,27 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
       res
         .status(409)
         .json({ message: "You have already voted in this decision room." });
-      return;
+      return; // Stop execution
     }
 
     await prisma.vote.create({
       data: {
         decisionRoomId: roomId,
         optionId,
-        voterId: voterIdentifier, // Store the voter's identifier
+        voterId: voterIdentifier,
+        userId: userId,
+        comment: comment || null,
       },
     });
 
-    // Optionally, fetch and return updated tally
     const updatedTally = await getTallyForRoom(roomId);
+    const justifications = await getJustificationsForRoom(roomId);
 
-    res
-      .status(200)
-      .json({ message: "Vote cast successfully!", newTally: updatedTally });
+    res.status(200).json({
+      message: "Vote cast successfully!",
+      newTally: updatedTally,
+      newJustifications: justifications,
+    });
   } catch (error: any) {
     console.error("Error casting vote:", error);
     res
@@ -207,23 +210,25 @@ export const getDecisionTally = async (req: Request, res: Response) => {
       where: { id: roomId },
     });
     if (!room) {
-      res.status(404).json({ message: "Decision room not found." });
-      return;
+      res.status(404).json({ message: "Decision room not null." });
+      return; // Stop execution
     }
 
-    // Only allow creator to see live tally if voting is not closed
-    // Anyone can see final results after deadline
     if (!isVotingClosed(room.deadline) && room.creatorId !== userId) {
       res.status(403).json({
         message: "You are not authorized to view live tallies for this room.",
       });
-      return;
+      return; // Stop execution
     }
 
     const tally = await getTallyForRoom(roomId);
-    res
-      .status(200)
-      .json({ tally, votingClosed: isVotingClosed(room.deadline) });
+    const justifications = await getJustificationsForRoom(roomId);
+
+    res.status(200).json({
+      tally,
+      votingClosed: isVotingClosed(room.deadline),
+      justifications: justifications,
+    });
   } catch (error: any) {
     console.error("Error fetching decision tally:", error);
     res
@@ -232,7 +237,7 @@ export const getDecisionTally = async (req: Request, res: Response) => {
   }
 };
 
-// Helper function to calculate tally
+// Helper function to calculate tally (counts per option)
 const getTallyForRoom = async (roomId: string) => {
   const votes = await prisma.vote.findMany({
     where: { decisionRoomId: roomId },
@@ -244,4 +249,51 @@ const getTallyForRoom = async (roomId: string) => {
     tally[vote.optionId] = (tally[vote.optionId] || 0) + 1;
   }
   return tally;
+};
+
+// NEW: Helper function to get vote justifications
+const getJustificationsForRoom = async (roomId: string) => {
+  const votesWithComments = await prisma.vote.findMany({
+    where: {
+      decisionRoomId: roomId,
+      // Corrected filter for comment: not null AND not empty string
+      NOT: [{ comment: null }, { comment: "" }],
+    },
+    select: {
+      id: true, // Unique ID for the vote
+      comment: true,
+      optionId: true, // Keep optionId to link back to option text easily
+      // CORRECTED: Use 'User' (capital U) for the relation
+      voterId: true,
+      User: {
+        // This refers to the 'User User?' relation field in Vote model
+        select: {
+          username: true,
+          id: true, // include id to show voterId if username not present
+        },
+      },
+      // CORRECTED: Use 'option' (lowercase o) for the relation (matches schema)
+      option: {
+        // This refers to the 'option Option' relation field in Vote model
+        select: {
+          text: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc", // Order by oldest comments first
+    },
+  });
+
+  // Format the justifications for the frontend
+  const formattedJustifications = votesWithComments.map((vote) => ({
+    voteId: vote.id,
+    // Access related data via the selected relation properties
+    voterDisplay:
+      vote.User?.username || vote.User?.id || vote.voterId || "Anonymous", // Prefer username, fallback to userId, then voterId, then 'Anonymous'
+    optionText: vote.option.text,
+    comment: vote.comment,
+  }));
+
+  return formattedJustifications;
 };

@@ -58,6 +58,7 @@ model Vote {
   id             String       @id @default(uuid())
   voterId        String // Can be userId for registered users, or a unique guest ID (e.g., from cookie)
   createdAt      DateTime     @default(now())
+  comment        String?
   // Relationships
   decisionRoomId String
   decisionRoom   DecisionRoom @relation(fields: [decisionRoomId], references: [id], onDelete: Cascade)
