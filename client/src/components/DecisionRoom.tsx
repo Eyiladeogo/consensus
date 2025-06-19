@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import { Loader2 } from "lucide-react"; // Importing a spinner icon
 
 // Define interfaces for the data structures
 interface Option {
@@ -40,7 +41,6 @@ export const DecisionRoom: React.FC = () => {
   const [commentText, setCommentText] = useState("");
 
   const [tally, setTally] = useState<Record<string, number>>({});
-  // NEW: State for justifications
   const [justifications, setJustifications] = useState<Justification[]>([]);
 
   // Effect to fetch room details
@@ -110,7 +110,7 @@ export const DecisionRoom: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTally(response.data.tally);
-      setJustifications(response.data.justifications || []); // Set justifications
+      setJustifications(response.data.justifications || []);
     } catch (err: any) {
       console.error("Error fetching tally and justifications:", err);
       // Handle error, e.g., display message
@@ -136,7 +136,7 @@ export const DecisionRoom: React.FC = () => {
         `decisions/${room.id}/vote`,
         {
           optionId: selectedOption,
-          comment: commentText.trim(), // Trim whitespace from comment
+          comment: commentText.trim(),
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -145,14 +145,13 @@ export const DecisionRoom: React.FC = () => {
 
       setVoteMessage(response.data.message);
       setHasVoted(true);
-      setCommentText(""); // Clear comment after successful vote
+      setCommentText("");
 
-      // Update tally and justifications after voting
       if (response.data.newTally && response.data.newJustifications) {
         setTally(response.data.newTally);
         setJustifications(response.data.newJustifications);
       } else {
-        fetchTallyAndJustifications(room.id); // Re-fetch if backend doesn't return
+        fetchTallyAndJustifications(room.id);
       }
     } catch (error: any) {
       setVoteMessage(error.response?.data?.message || "Failed to cast vote.");
@@ -162,49 +161,93 @@ export const DecisionRoom: React.FC = () => {
   // --- Render Logic ---
   if (loading) {
     return (
-      <div className="text-center mt-20 text-xl">Loading room details...</div>
+      <div className="flex justify-center items-center min-h-screen bg-neutral-bg">
+        <Loader2 className="animate-spin text-primary-blue h-10 w-10" />
+        <p className="ml-3 text-xl text-text-secondary">
+          Loading room details...
+        </p>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center mt-20 text-xl text-red-600">{error}</div>
+      <div className="flex justify-center items-center min-h-screen bg-neutral-bg">
+        <p className="text-center text-xl text-error-red p-4 rounded-lg bg-neutral-card shadow-md">
+          {error}
+        </p>
+      </div>
     );
   }
 
   if (!room) {
     return (
-      <div className="text-center mt-20 text-xl text-gray-700">
-        Room not found.
+      <div className="flex justify-center items-center min-h-screen bg-neutral-bg">
+        <p className="text-center text-xl text-text-secondary p-4 rounded-lg bg-neutral-card shadow-md">
+          Room not found.
+        </p>
       </div>
     );
   }
 
   const votingClosedDisplay = room.votingClosed;
 
+  // Sort tally by count in descending order
   const sortedTally = Object.entries(tally).sort(
     ([, countA], [, countB]) => countB - countA
   );
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-3xl">
-        <h1 className="text-3xl font-bold mb-4 text-gray-800">{room.title}</h1>
-        <p className="text-gray-700 mb-6">{room.explanation}</p>
+    <div className="container mx-auto p-6 md:p-8 bg-neutral-bg min-h-screen">
+      <div className="bg-neutral-card p-6 md:p-10 rounded-lg shadow-custom-lg border border-neutral-border">
+        {/* Room Header */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6 pb-4 border-b border-neutral-border">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary mb-2">
+              {room.title}
+            </h1>
+            <p className="text-text-secondary text-lg mb-4 leading-relaxed">
+              {room.explanation}
+            </p>
+          </div>
+          <div className="md:ml-6 mt-4 md:mt-0 text-right md:w-1/3">
+            <p className="text-text-secondary text-sm font-medium">
+              Voting Deadline:
+            </p>
+            <p className="text-lg font-semibold text-text-primary">
+              {new Date(room.deadline).toLocaleString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              {votingClosedDisplay && (
+                <span className="font-bold text-error-red ml-2"> (CLOSED)</span>
+              )}
+            </p>
+            {/* Timezone Note: Date displayed in user's local timezone. */}
+          </div>
+        </div>
 
-        <p className="text-sm text-gray-600 mb-4">
-          Voting Deadline: {new Date(room.deadline).toLocaleString()}
-          {votingClosedDisplay && (
-            <span className="font-bold text-red-600 ml-2"> (CLOSED)</span>
-          )}
-        </p>
-
-        <h2 className="text-xl font-semibold mb-3 text-gray-700">Options:</h2>
-        <div className="space-y-3 mb-6">
+        {/* Options Section */}
+        <h2 className="text-2xl font-bold text-text-primary mb-5">Options:</h2>
+        <div className="grid grid-cols-1 gap-4 mb-6">
           {room.options.map((option) => (
             <label
               key={option.id}
-              className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition duration-150"
+              className={`flex items-center p-4 border rounded-lg cursor-pointer transition duration-200 ease-in-out
+                ${
+                  selectedOption === option.id
+                    ? "bg-primary-blue bg-opacity-10 border-primary-blue shadow-custom-sm"
+                    : "bg-neutral-card border-neutral-border hover:bg-neutral-bg hover:border-text-accent-blue"
+                }
+                ${
+                  hasVoted || votingClosedDisplay
+                    ? "opacity-60 cursor-not-allowed"
+                    : ""
+                }
+              `}
             >
               <input
                 type="radio"
@@ -212,30 +255,33 @@ export const DecisionRoom: React.FC = () => {
                 value={option.id}
                 checked={selectedOption === option.id}
                 onChange={() => setSelectedOption(option.id)}
-                className="form-radio h-5 w-5 text-blue-600"
+                className="form-radio h-5 w-5 text-primary-blue focus:ring-primary-blue disabled:opacity-50"
                 disabled={hasVoted || votingClosedDisplay}
               />
-              <span className="ml-3 text-lg text-gray-800">{option.text}</span>
+              <span className="ml-4 text-lg text-text-primary font-medium">
+                {option.text}
+              </span>
             </label>
           ))}
         </div>
 
+        {/* Optional Justification Textarea and Vote Button */}
         {!votingClosedDisplay && !hasVoted && (
-          <div className="mb-6">
+          <div className="mb-6 bg-neutral-bg p-6 rounded-lg border border-neutral-border shadow-inner">
             <label
               htmlFor="comment"
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-text-secondary text-base font-medium mb-2"
             >
-              Optional: Justify your vote (anonymous)
+              Optional: Justify your vote
             </label>
             <textarea
               id="comment"
-              className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shadow-sm appearance-none border border-neutral-border rounded-lg w-full py-2.5 px-4 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent transition duration-200 resize-y"
               rows={3}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               disabled={hasVoted}
-              placeholder="E.g., 'I chose this option because...'"
+              placeholder="Share your thoughts on why you chose this option..."
             />
           </div>
         )}
@@ -243,44 +289,62 @@ export const DecisionRoom: React.FC = () => {
         {!votingClosedDisplay && !hasVoted && (
           <button
             onClick={handleVote}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200"
+            className="w-full bg-primary-blue hover:bg-secondary-indigo text-white font-bold py-3.5 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-opacity-50 transition duration-300 shadow-md transform hover:-translate-y-0.5 disabled:bg-gray-400 disabled:shadow-none disabled:transform-none"
             disabled={!selectedOption}
           >
             Cast Your Vote
           </button>
         )}
 
+        {/* Feedback Messages */}
         {hasVoted && !votingClosedDisplay && (
-          <p className="text-center text-green-600 font-semibold mb-4">
+          <p className="mt-6 text-center text-success-green font-semibold text-lg animate-pulse">
             Thank you for voting! Your vote has been recorded.
           </p>
         )}
 
         {voteMessage && (
-          <p className="mt-4 text-center text-red-500">{voteMessage}</p>
+          <p className="mt-6 text-center text-error-red font-medium text-base">
+            {voteMessage}
+          </p>
         )}
 
+        {/* Tally and Justifications Section */}
         {(votingClosedDisplay || room.isCreator) && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h2 className="text-xl font-semibold mb-3 text-gray-700">
-              {votingClosedDisplay ? "Final Results" : "Live Tally:"}
+          <div className="mt-10 pt-8 border-t-2 border-neutral-border">
+            <h2 className="text-2xl font-bold text-text-primary mb-5">
+              {votingClosedDisplay ? "Final Results" : "Live Tally"}
             </h2>
             {Object.keys(tally).length === 0 ? (
-              <p className="text-gray-600">No votes cast yet.</p>
+              <p className="text-text-secondary italic text-lg text-center">
+                No votes cast yet.
+              </p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-3 mb-8">
                 {sortedTally.map(([optionId, count]) => {
                   const optionText =
                     room.options.find((opt) => opt.id === optionId)?.text ||
                     "Unknown Option";
+                  // Calculate percentage for potential future use or visual bars
+                  const totalVotes = Object.values(tally).reduce(
+                    (sum, current) => sum + current,
+                    0
+                  );
+                  const percentage =
+                    totalVotes > 0
+                      ? ((count / totalVotes) * 100).toFixed(0)
+                      : 0;
+
                   return (
                     <li
                       key={optionId}
-                      className="flex justify-between items-center bg-gray-50 p-3 rounded-lg"
+                      className="bg-neutral-bg p-4 rounded-lg shadow-sm flex justify-between items-center border border-neutral-border"
                     >
-                      <span className="text-gray-800">{optionText}</span>
-                      <span className="text-blue-600 font-bold">
-                        {count} votes
+                      <span className="text-text-primary text-lg font-medium">
+                        {optionText}
+                      </span>
+                      <span className="text-primary-blue font-bold text-xl">
+                        {count} votes {/* ({percentage}%) */}
                       </span>
                     </li>
                   );
@@ -288,28 +352,28 @@ export const DecisionRoom: React.FC = () => {
               </ul>
             )}
 
-            {/* NEW: Display Justifications Section */}
+            {/* Justifications Section */}
             {justifications.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h2 className="text-xl font-semibold mb-3 text-gray-700">
-                  Justifications:
+              <div className="mt-8 pt-6 border-t border-neutral-border">
+                <h2 className="text-2xl font-bold text-text-primary mb-5">
+                  Justifications
                 </h2>
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {justifications.map((justify) => (
                     <li
                       key={justify.voteId}
-                      className="bg-blue-50 p-4 rounded-lg shadow-sm"
+                      className="bg-neutral-bg p-5 rounded-lg shadow-custom-sm border border-neutral-border"
                     >
-                      <p className="text-sm text-gray-800 font-medium mb-1">
-                        <span className="font-semibold text-blue-800">
+                      <p className="text-text-secondary text-sm font-medium mb-2">
+                        <span className="font-semibold text-text-primary">
                           {justify.voterDisplay}
                         </span>{" "}
                         voted for{" "}
-                        <span className="font-bold text-blue-700">
+                        <span className="font-bold text-primary-blue">
                           "{justify.optionText}"
                         </span>
                       </p>
-                      <p className="text-gray-700 text-sm italic">
+                      <p className="text-text-primary text-base italic leading-relaxed">
                         "{justify.comment}"
                       </p>
                     </li>

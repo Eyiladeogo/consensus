@@ -16,7 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({ appName }) => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 shadow-lg sticky top-0 z-50">
+    <nav className="bg-gradient-to-r from-primary-blue to-secondary-indigo p-4 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center">
         {/* App Logo/Name */}
         <Link
@@ -42,6 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({ appName }) => {
               className="focus:outline-none p-1 rounded-full hover:bg-blue-700 transition duration-200"
               aria-label="User menu"
             >
+              {/* Using Lucide React UserCircle as the default SVG icon */}
               <UserCircle className="w-8 h-8 text-white" />
             </button>
 

@@ -21,7 +21,6 @@ export const AuthPage: React.FC = () => {
       setMessage(response.data.message);
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
-        // Redirect to dashboard or decision rooms after successful auth
         navigate("/dashboard");
       }
     } catch (error: any) {
@@ -30,23 +29,46 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          {isLogin ? "Login" : "Register"}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-bg p-4">
+      <div className="bg-neutral-card p-8 rounded-lg shadow-custom-lg w-full max-w-md">
+        <h2 className="text-3xl font-bold mb-8 text-center text-text-primary">
+          Welcome to <span className="text-primary-blue">Consensus</span>
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex justify-center mb-6">
+          <button
+            className={`px-6 py-2 rounded-l-lg text-lg font-semibold transition duration-300 ${
+              isLogin
+                ? "bg-primary-blue text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+            onClick={() => setIsLogin(true)}
+          >
+            Login
+          </button>
+          <button
+            className={`px-6 py-2 rounded-r-lg text-lg font-semibold transition duration-300 ${
+              !isLogin
+                ? "bg-primary-blue text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+            onClick={() => setIsLogin(false)}
+          >
+            Register
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-text-secondary text-sm font-medium mb-2"
               htmlFor="username"
             >
-              Username:
+              Username
             </label>
             <input
               type="text"
               id="username"
-              className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shadow-sm appearance-none border border-neutral-border rounded-lg w-full py-2.5 px-4 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent transition duration-200"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -54,15 +76,15 @@ export const AuthPage: React.FC = () => {
           </div>
           <div>
             <label
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-text-secondary text-sm font-medium mb-2"
               htmlFor="password"
             >
-              Password:
+              Password
             </label>
             <input
               type="password"
               id="password"
-              className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shadow-sm appearance-none border border-neutral-border rounded-lg w-full py-2.5 px-4 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent transition duration-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -70,22 +92,16 @@ export const AuthPage: React.FC = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200"
+            className="w-full bg-primary-blue hover:bg-secondary-indigo text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-opacity-50 transition duration-300 shadow-md"
           >
             {isLogin ? "Login" : "Register"}
           </button>
         </form>
         {message && (
-          <p className="mt-4 text-center text-sm text-red-500">{message}</p>
+          <p className="mt-5 text-center text-sm text-error-red font-medium">
+            {message}
+          </p>
         )}
-        <button
-          onClick={() => setIsLogin(!isLogin)}
-          className="mt-4 w-full text-blue-500 hover:text-blue-700 text-sm"
-        >
-          {isLogin
-            ? "Need an account? Register"
-            : "Already have an account? Login"}
-        </button>
       </div>
     </div>
   );

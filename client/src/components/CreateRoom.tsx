@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import { PlusCircle, MinusCircle } from "lucide-react"; // Icons for add/remove options
 
 export const CreateRoom: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -14,12 +15,12 @@ export const CreateRoom: React.FC = () => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
-    console.log("hi");
   };
 
   const handleAddOption = () => {
     if (options.length < 5) {
       setOptions([...options, ""]);
+      setMessage(""); // Clear message if new option is added successfully
     } else {
       setMessage("You can have a maximum of 5 options.");
     }
@@ -29,6 +30,7 @@ export const CreateRoom: React.FC = () => {
     if (options.length > 2) {
       const newOptions = options.filter((_, i) => i !== index);
       setOptions(newOptions);
+      setMessage(""); // Clear message if option is removed successfully
     } else {
       setMessage("You must have at least 2 options.");
     }
@@ -49,11 +51,12 @@ export const CreateRoom: React.FC = () => {
         return;
       }
 
+      // Format deadline to ISO string for backend
       const response = await api.post(`decisions/`, {
         title,
         explanation,
         options: validOptions,
-        deadline,
+        deadline: new Date(deadline).toISOString(), // Ensure ISO string for backend
       });
       setMessage(response.data.message);
       navigate("/dashboard"); // Go back to dashboard after creation
@@ -66,53 +69,55 @@ export const CreateRoom: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-bg p-4 md:p-8">
+      <div className="bg-neutral-card p-6 md:p-10 rounded-lg shadow-custom-lg w-full max-w-2xl">
+        <h2 className="text-3xl font-bold mb-8 text-center text-text-primary">
           Create New Decision Room
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-text-secondary text-base font-medium mb-2"
               htmlFor="title"
             >
-              Decision Title:
+              Decision Title
             </label>
             <input
               type="text"
               id="title"
-              className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shadow-sm appearance-none border border-neutral-border rounded-lg w-full py-2.5 px-4 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent transition duration-200"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Next Team Lunch Location"
               required
             />
           </div>
           <div>
             <label
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-text-secondary text-base font-medium mb-2"
               htmlFor="explanation"
             >
-              Explanation:
+              Explanation
             </label>
             <textarea
               id="explanation"
-              className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shadow-sm appearance-none border border-neutral-border rounded-lg w-full py-2.5 px-4 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent transition duration-200"
               value={explanation}
               onChange={(e) => setExplanation(e.target.value)}
               rows={4}
+              placeholder="Provide a detailed explanation for the decision..."
               required
             />
           </div>
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Options (2-5):
+            <label className="block text-text-secondary text-base font-medium mb-3">
+              Options (2-5)
             </label>
             {options.map((option, index) => (
-              <div key={index} className="flex items-center mb-2">
+              <div key={index} className="flex items-center mb-3">
                 <input
                   type="text"
-                  className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2"
+                  className="shadow-sm appearance-none border border-neutral-border rounded-lg w-full py-2.5 px-4 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent mr-3 transition duration-200"
                   value={option}
                   onChange={(e) => handleOptionChange(index, e.target.value)}
                   placeholder={`Option ${index + 1}`}
@@ -122,9 +127,10 @@ export const CreateRoom: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleRemoveOption(index)}
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition duration-200"
+                    className="p-2 text-error-red hover:text-red-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-error-red rounded-full"
+                    aria-label={`Remove option ${index + 1}`}
                   >
-                    Remove
+                    <MinusCircle className="w-6 h-6" />
                   </button>
                 )}
               </div>
@@ -133,23 +139,24 @@ export const CreateRoom: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAddOption}
-                className="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+                className="flex items-center text-primary-blue hover:text-secondary-indigo font-medium py-2 transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-blue rounded-md"
               >
-                Add Option
+                <PlusCircle className="w-5 h-5 mr-1" />
+                <span>Add Option</span>
               </button>
             )}
           </div>
           <div>
             <label
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-text-secondary text-base font-medium mb-2"
               htmlFor="deadline"
             >
-              Voting Deadline:
+              Voting Deadline
             </label>
             <input
               type="date"
               id="deadline"
-              className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shadow-sm appearance-none border border-neutral-border rounded-lg w-full py-2.5 px-4 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent transition duration-200"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
               required
@@ -157,13 +164,15 @@ export const CreateRoom: React.FC = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200"
+            className="w-full bg-success-green hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-success-green focus:ring-opacity-50 transition duration-300 shadow-md"
           >
             Create Room
           </button>
         </form>
         {message && (
-          <p className="mt-4 text-center text-sm text-red-500">{message}</p>
+          <p className="mt-5 text-center text-sm font-medium text-error-red">
+            {message}
+          </p>
         )}
       </div>
     </div>
