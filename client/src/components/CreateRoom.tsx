@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
-import { PlusCircle, MinusCircle } from "lucide-react"; // Icons for add/remove options
+import { PlusCircle, MinusCircle } from "lucide-react";
 
 export const CreateRoom: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -59,7 +59,7 @@ export const CreateRoom: React.FC = () => {
         deadline: new Date(deadline).toISOString(), // Ensure ISO string for backend
       });
       setMessage(response.data.message);
-      navigate("/dashboard"); // Go back to dashboard after creation
+      navigate("/dashboard");
     } catch (error: any) {
       setMessage(
         error.response?.data?.message ||

@@ -338,7 +338,7 @@ export const DecisionRoom: React.FC = () => {
                         {optionText}
                       </span>
                       <span className="text-primary-blue font-bold text-xl">
-                        {count} votes {/* ({percentage}%) */}
+                        {count} votes ({percentage}%)
                       </span>
                     </li>
                   );

@@ -6,7 +6,6 @@ interface DecisionRoom {
   id: string;
   title: string;
   deadline: string;
-  // Add other properties if needed for display on dashboard
 }
 
 export const Dashboard: React.FC = () => {
@@ -31,7 +30,6 @@ export const Dashboard: React.FC = () => {
         setDecisionRooms(sortedRooms);
       } catch (error: any) {
         console.error("Error fetching decision rooms:", error);
-        // Handle token expiration or invalid token
         localStorage.removeItem("token");
         navigate("/auth");
       }
@@ -55,14 +53,12 @@ export const Dashboard: React.FC = () => {
             onClick={() => navigate("/create-room")}
             className="flex items-center px-6 py-3 bg-success-green hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5"
           >
-            {/* Plus icon from Lucide React or similar could go here */}
             <span>Create New Room</span>
           </button>
           <button
             onClick={handleLogout}
             className="flex items-center px-6 py-3 bg-error-red hover:bg-red-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5"
           >
-            {/* Logout icon from Lucide React or similar could go here */}
             <span>Logout</span>
           </button>
         </div>
@@ -92,7 +88,6 @@ export const Dashboard: React.FC = () => {
                 <p className="text-text-secondary text-sm mb-4">
                   Deadline:{" "}
                   <span className="font-medium">
-                    {/* CHANGED: Displaying date in UTC */}
                     {new Date(room.deadline).toUTCString()} (UTC)
                   </span>
                 </p>

@@ -4,9 +4,8 @@ import { Dashboard } from "./components/Dashboard";
 import { AuthPage } from "./components/AuthPage";
 import { CreateRoom } from "./components/CreateRoom";
 import { DecisionRoom } from "./components/DecisionRoom";
-import { Navbar } from "./components/Navbar"; // NEW: Import Navbar
+import { Navbar } from "./components/Navbar";
 
-// Main App Component with Router
 const App: React.FC = () => {
   // Define the app name centrally
   const appName = "Consensus";
@@ -31,7 +30,6 @@ const App: React.FC = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create-room" element={<CreateRoom />} />
             <Route path="/room/:id" element={<DecisionRoom />} />
-            {/* Add a 404 route for unknown paths */}
             <Route
               path="*"
               element={

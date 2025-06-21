@@ -1,12 +1,3 @@
-/* client/src/App.css */
-/* This file is intentionally left mostly empty,
-   as we are primarily using Tailwind CSS for styling. */
-/* Any custom global styles not easily handled by Tailwind can go here,
-   but for this project, we aim for a Tailwind-first approach. */
-
-/* Removed all default Create React App CSS. */
-
-/* Ensure the app takes full height */
 #root,
 html,
 body {
