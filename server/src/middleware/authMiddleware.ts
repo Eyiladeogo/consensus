@@ -37,11 +37,9 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
       // If token verification fails (e.g., expired, invalid signature)
       console.error("Token verification failed:", error.message);
       res.status(401).json({ message: "Not authorized, token failed." });
-      // Do NOT call next() here, as we are sending a response and terminating the request flow.
     }
   } else {
     // If no token is provided in the header
     res.status(401).json({ message: "Not authorized, no token." });
-    // Do NOT call next() here.
   }
 };

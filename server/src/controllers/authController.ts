@@ -1,10 +1,15 @@
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs"; // Install: npm install bcryptjs @types/bcryptjs
-import jwt from "jsonwebtoken"; // Install: npm install jsonwebtoken @types/jsonwebtoken
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkey"; // IMPORTANT: Use a strong secret in production!
+
+if (!process.env.JWT_SECRET) {
+  console.error("CRITICAL ERROR: JWT_SECRET environment variable is not set!");
+  process.exit(1);
+}
+const JWT_SECRET: string = process.env.JWT_SECRET;
 
 export const registerUser = async (req: Request, res: Response) => {
   const { username, password } = req.body;

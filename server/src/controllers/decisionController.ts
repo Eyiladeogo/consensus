@@ -8,11 +8,11 @@ const isVotingClosed = (deadline: Date): boolean => new Date() > deadline;
 
 export const createDecisionRoom = async (req: Request, res: Response) => {
   const { title, explanation, options, deadline } = req.body;
-  const userId = req.userId; // From authMiddleware
+  const userId = req.userId;
 
   if (!userId) {
     res.status(401).json({ message: "User not authenticated." });
-    return; // Stop execution
+    return;
   }
   if (
     !title ||
@@ -26,7 +26,7 @@ export const createDecisionRoom = async (req: Request, res: Response) => {
       message:
         "All fields (title, explanation, 2-5 options, deadline) are required.",
     });
-    return; // Stop execution
+    return;
   }
 
   try {
@@ -134,7 +134,7 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
       message:
         "You must be logged in to vote in this example. Guest voting requires additional setup (e.g., unique cookie ID).",
     });
-    return; // Stop execution
+    return;
   }
 
   try {
@@ -143,12 +143,12 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
     });
     if (!room) {
       res.status(404).json({ message: "Decision room not found." });
-      return; // Stop execution
+      return;
     }
 
     if (isVotingClosed(room.deadline)) {
       res.status(400).json({ message: "Voting for this room has closed." });
-      return; // Stop execution
+      return;
     }
 
     const option = await prisma.option.findFirst({
@@ -158,7 +158,7 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
       res
         .status(400)
         .json({ message: "Invalid option selected for this room." });
-      return; // Stop execution
+      return;
     }
 
     const existingVote = await prisma.vote.findFirst({
@@ -172,7 +172,7 @@ export const voteInDecisionRoom = async (req: Request, res: Response) => {
       res
         .status(409)
         .json({ message: "You have already voted in this decision room." });
-      return; // Stop execution
+      return;
     }
 
     await prisma.vote.create({
@@ -263,16 +263,13 @@ const getJustificationsForRoom = async (roomId: string) => {
       id: true, // Unique ID for the vote
       comment: true,
       optionId: true, // Keep optionId to link back to option text easily
-      // CORRECTED: Use 'User' (capital U) for the relation
       voterId: true,
       User: {
-        // This refers to the 'User User?' relation field in Vote model
         select: {
           username: true,
           id: true, // include id to show voterId if username not present
         },
       },
-      // CORRECTED: Use 'option' (lowercase o) for the relation (matches schema)
       option: {
         // This refers to the 'option Option' relation field in Vote model
         select: {
