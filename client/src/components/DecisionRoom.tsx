@@ -266,7 +266,7 @@ export const DecisionRoom: React.FC = () => {
               htmlFor="comment"
               className="block text-text-secondary text-base font-medium mb-2"
             >
-              Optional: Justify your vote (anonymous)
+              Optional: Justify your vote
             </label>
             <textarea
               id="comment"
