@@ -2,37 +2,70 @@
 
 import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
-import cors from "cors"; // Install: npm install cors @types/cors
+import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import decisionRoutes from "./routes/decisionRoutes";
-import { PrismaClient } from "@prisma/client"; // Prisma client will be generated after 'npx prisma generate'
+import { PrismaClient } from "@prisma/client";
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient(); // Initialize Prisma Client
+const prisma = new PrismaClient();
 
-// Middleware
+// Configure CORS
+// Explicitly define allowedOrigins to include string and RegExp types
+const allowedOrigins: (string | RegExp)[] = [
+  // NEW: Type annotation (string | RegExp)[]
+  "http://localhost:3000",
+  "https://getconsensus.vercel.app",
+  /^https:\/\/.*\.vercel\.app$/, // Regex to allow all Vercel subdomains (e.g., preview deployments)
+];
+
 app.use(
   cors({
-    origin: "http://localhost:3000", // Allow requests from your React frontend
-    credentials: true, // Allow cookies, authorization headers etc.
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      // Check if origin is in the allowed string list
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Check if origin matches any allowed regex pattern
+      const isRegexMatch = allowedOrigins.some((allowedOrigin) => {
+        if (allowedOrigin instanceof RegExp) {
+          // Use instanceof RegExp for type narrowing
+          return allowedOrigin.test(origin);
+        }
+        return false;
+      });
+
+      if (isRegexMatch) {
+        return callback(null, true);
+      }
+
+      // If neither string nor regex matches
+      const msg =
+        "The CORS policy for this site does not allow access from the specified Origin.";
+      return callback(new Error(msg), false);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.use(express.json()); // Enable JSON body parsing for incoming requests
+app.use(express.json());
 
-// Root route (for testing purposes)
 app.get("/", (req: Request, res: Response) => {
   res.send("Collaborative Voting App Backend is Running!");
 });
 
-// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/decisions", decisionRoutes);
 
-// Error Handling Middleware (should be the last middleware)
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack); // Log the error stack for debugging
+  console.error(err.stack);
   res
     .status(500)
     .json({ message: "Something went wrong!", error: err.message });
@@ -48,7 +81,6 @@ app.listen(PORT, () => {
   );
 });
 
-// Graceful shutdown
 process.on("beforeExit", async () => {
   await prisma.$disconnect();
   console.log("Prisma Client disconnected.");
