@@ -1,16 +1,14 @@
 # Consensus: Collaborative Decision Voting App
 
-- **Live Frontend URL:** [Your Vercel/Netlify URL Here]
-- **Live Backend URL:** [Your Render/Railway URL Here]
-- **GitHub Repository:** [Link to this GitHub Repository]
+- **Live Frontend URL:** [https://getconsensus.vercel.app]
+- **Live Backend URL:** [https://consensus-44zx.onrender.com]
+- **GitHub Repository:** [https://github.com/Eyiladeogo/consensus]
 
 ---
 
 ## 1. Introduction
 
 **Consensus** is a full-stack web application designed to facilitate collaborative decision-making through anonymous voting. Users can create decision rooms, define options, set deadlines, and collect anonymous votes. The app emphasizes a clean, intuitive UI and a robust, scalable backend.
-
-This project was built as a full-stack developer assessment, showcasing proficiency in modern web technologies, database interactions, authentication mechanisms, and UI/UX principles.
 
 ---
 
@@ -22,15 +20,13 @@ This project was built as a full-stack developer assessment, showcasing proficie
   - A list of 2 to 5 distinct voting options
   - A specific deadline for voting
 - **Dynamic Room Management:** Users can view a dashboard of all decision rooms they have created.
-- **Anonymous Voting:**
-  - Both registered users and guests can cast exactly one anonymous vote per room.
-  - For registered users, their authenticated user ID is used.
-  - For guests, a unique, persistent client-side ID (stored in a cookie) serves as their anonymous identifier.
-- **Vote Justification:** Voters can provide an anonymous text comment to justify their choice.
+- **Voting:**
+  - Users can cast exactly one vote per room.
+- **Vote Justification:** Voters can provide a text comment to justify their choice.
 - **Live Tallies & Results:**
-  - The room creator can view real-time vote tallies for their active decision rooms.
+  - The room creator can view vote tallies for their active decision rooms.
   - After the deadline, final results are displayed to anyone viewing the room.
-  - Vote justifications are shown to the room creator (or after the deadline), e.g., `[Voter Display Name] voted for "[Option Text]" - "[Comment]"`.
+  - Vote justifications are shown to the room creator, e.g., `[Voter Display Name] voted for "[Option Text]" - "[Comment]"`.
 
 ---
 
@@ -41,20 +37,14 @@ This project was built as a full-stack developer assessment, showcasing proficie
 - **React** (v19)
 - **TypeScript** (v4.9.5)
 - **Tailwind CSS** (v3.4.17)
-- **React Router DOM** (v7.6.2)
-- **Axios** (v1.10.0)
-- **Lucide React** (v0.518.0)
 
 ### Backend
 
-- **Node.js** (v20.x)
-- **Express** (v4.19.2)
-- **TypeScript** (v5.4.5)
-- **Prisma** (v5.x.x)
-- **bcryptjs** (v2.4.3)
-- **jsonwebtoken** (v9.0.2)
-- **dotenv** (v16.4.5)
-- **cors** (v2.8.5)
+- **Node.js**
+- **Express** (v5.1.0)
+- **TypeScript** (v5.8.3)
+- **Prisma** (v6.10.0)
+
 
 ### Database
 
