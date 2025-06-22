@@ -275,7 +275,7 @@ export const DecisionRoom: React.FC = () => {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               disabled={hasVoted}
-              placeholder="Share your anonymous thoughts on why you chose this option..."
+              placeholder="Share your thoughts on why you chose this option..."
             />
           </div>
         )}
